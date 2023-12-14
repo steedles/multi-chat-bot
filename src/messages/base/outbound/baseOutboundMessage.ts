@@ -1,4 +1,6 @@
 export abstract class BaseOutboundMessage {
+  returnResponse = true;
+
   expected_user_response: {
     response_type?: USER_RESPONSE_TYPES;
     target_page?: string;
@@ -48,6 +50,10 @@ export abstract class BaseOutboundMessage {
     this.setResponseType(USER_RESPONSE_TYPES.MENU_OPTION);
     return this;
   }
+
+  sendResponse() {}
+
+  getFormattedOutput() {}
 }
 
 export enum USER_RESPONSE_TYPES {

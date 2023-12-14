@@ -1,7 +1,12 @@
 import { User } from "../types/user";
 import { randomUUID } from "crypto";
 import { Converter } from "aws-sdk/clients/dynamodb";
-import { DynamoDBClient, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBClient,
+  GetItemCommand,
+  PutItemCommand,
+  QueryCommand,
+} from "@aws-sdk/client-dynamodb";
 import { Utils } from "../utils";
 import { Session } from "../types/session";
 import { BaseProvider } from "../providers/baseProvider";
@@ -82,6 +87,39 @@ export default class SessionService {
     return session;
   }
 
+  public async getSessionByUserId(user: User, provider: BaseProvider): Promise<Session> {
+    this.client = new DynamoDBClient(Utils.getAWSConfig());
+
+    const params = {
+      TableName: "sessions",
+      IndexName: "user_id-index",
+      KeyConditionExpression: `user_id=:user_id`,
+      ExpressionAttributeValues: {
+        ":user_id": { S: user.uuid },
+      },
+    };
+
+    const command = new QueryCommand(params);
+    const response = await this.client.send(command);
+    const mapped = response.Items.map((item) => Converter.unmarshall(item) as Session);
+    const sorted = mapped.sort((a, b) => Date.parse(b.date_created) - Date.parse(a.date_created));
+    const session = sorted[0];
+
+    if (!session || session.user_id != user.uuid) {
+      console.warn("Session not found. Creating new session", { user: user });
+      return await this.startSession(user, provider);
+    }
+
+    const expiry = Date.parse(session.expiry_date);
+    if (Date.now() > expiry) {
+      console.info("Session expired. Creating new session", { session: session, user: user });
+      return await this.startSession(user, provider);
+    }
+
+    SessionService.SESSION = session;
+    return session;
+  }
+
   public async updateSessionState(response: BaseOutboundMessage, provider: BaseProvider) {
     this.client = new DynamoDBClient(Utils.getAWSConfig());
     const session = SessionService.SESSION;
@@ -112,7 +150,7 @@ export default class SessionService {
 
   public getHomeState() {
     return {
-      target_page: "intro/WelcomePage",
+      target_page: "demo/HomePage",
       parameters: [
         {
           home: true,

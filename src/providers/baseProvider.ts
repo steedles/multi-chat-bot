@@ -7,6 +7,7 @@ import MessageService from "../services/messageService";
 import { BasePage } from "../classes/basePage";
 import { BaseOutboundTextMessage } from "../messages/base/outbound/baseOutboundTextMessage";
 import { SessionState } from "../types/session";
+import { BaseOutboundMenuMessage } from "../messages/base/outbound/baseOutboundMenuMessage";
 
 declare function require(moduleName: string): any;
 
@@ -19,6 +20,8 @@ export abstract class BaseProvider {
   abstract processOutboundMessage(response: BaseOutboundMessage): any;
 
   abstract processOutboundTextMessage(response: BaseOutboundTextMessage): any;
+
+  abstract processOutboundMenuMessage(response: BaseOutboundMenuMessage): any;
 
   abstract getStateFromMenuItem(
     request: BaseInboundMessage,

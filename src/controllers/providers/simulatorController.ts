@@ -1,5 +1,5 @@
 import BaseProviderController from "./baseProviderController";
-import { Body, Controller, Get, Headers } from "@nestjs/common";
+import { Body, Controller, Headers, Post } from "@nestjs/common";
 import { Session } from "../../types/session";
 import { SimulatorSessionStart } from "../../types/requests/providers/simulator/session";
 import UserService from "../../services/userService";
@@ -13,7 +13,7 @@ import { SimulatorInboundTextMessage } from "../../messages/simulator/inbound/si
 export default class SimulatorController extends BaseProviderController {
   provider = new SimulatorProvider();
 
-  @Get("session")
+  @Post("session")
   async startSession(@Body() requestBody: SimulatorSessionStart): Promise<Session> {
     const userService = new UserService();
     const sessionService = new SessionService();
@@ -28,10 +28,10 @@ export default class SimulatorController extends BaseProviderController {
     return session;
   }
 
-  @Get("incoming")
+  @Post("incoming")
   async incomingMessage(
     @Headers() headers: Headers,
-    @Body() requestBody: BaseInboundMessage
+    @Body() requestBody: SimulatorInboundTextMessage
   ): Promise<BaseOutboundMessage> {
     const userService = new UserService();
     const sessionService = new SessionService();
